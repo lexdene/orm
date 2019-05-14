@@ -1,5 +1,14 @@
+databases[postgresql]
+databases[mysql]
 databases[sqlite]
 typesystem
+
+# Async database drivers
+aiomysql
+aiosqlite
+asyncpg
+
+pymysql
 
 # Testing
 autoflake
@@ -9,3 +18,4 @@ isort
 mypy
 pytest
 pytest-cov
+

@@ -203,7 +203,7 @@ class QuerySet:
 
     async def count(self) -> int:
         expr = self.build_select_expression()
-        expr = sqlalchemy.func.count().select().select_from(expr)
+        expr = sqlalchemy.func.count().select().select_from(sqlalchemy.sql.expression.alias(expr))
         return await self.database.fetch_val(expr)
 
     async def all(self, **kwargs):
@@ -233,11 +233,16 @@ class QuerySet:
     async def create(self, **kwargs):
         # Validate the keyword arguments.
         fields = self.model_cls.fields
+        pkname = self.model_cls.__pkname__
+        pk = fields[pkname]
         required = [key for key, value in fields.items() if not value.has_default()]
         validator = typesystem.Object(
             properties=fields, required=required, additional_properties=False
         )
         kwargs = validator.validate(kwargs)
+        # remove pk with NULL value to avoid constraint violation in postgres
+        if pk.allow_null:
+            del kwargs[pkname]
 
         # Build the insert expression.
         expr = self.table.insert()
