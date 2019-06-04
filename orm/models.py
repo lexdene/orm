@@ -241,7 +241,7 @@ class QuerySet:
         )
         kwargs = validator.validate(kwargs)
         # remove pk with NULL value to avoid constraint violation in postgres
-        if pk.allow_null:
+        if pk.allow_null and kwargs[pkname] is None:
             del kwargs[pkname]
 
         # Build the insert expression.
