@@ -118,6 +118,19 @@ async def test_model_crud(database_url):
 
 @pytest.mark.parametrize("database_url", DATABASE_URLS)
 @async_adapter
+async def test_create_model_with_pk_value(database_url):
+    async with Database(database_url, force_rollback=True) as database:
+        for model in models:
+            model.__database__ = database
+        users = await User.objects.all()
+        assert users == []
+
+        user = await User.objects.create(id=100000001, name="Tom")
+        assert user.id == 100000001
+
+
+@pytest.mark.parametrize("database_url", DATABASE_URLS)
+@async_adapter
 async def test_model_get(database_url):
     async with Database(database_url, force_rollback=True) as database:
         for model in models:
