@@ -238,3 +238,18 @@ async def test_offset():
 
         users = await User.objects.offset(1).limit(1).all()
         assert users[0].name == 'Jane'
+
+
+@async_adapter
+async def test_model_order_by():
+    async with database:
+        await Product.objects.create(name="T-Shirt", rating=5, in_stock=True)
+        await Product.objects.create(name="Dress", rating=3)
+        await Product.objects.create(name="Coat", rating=3, in_stock=True)
+
+        coat = await Product.objects.order_by("name")
+        assert coat[0].name == "Coat"
+        shirt = await Product.objects.order_by("-name")
+        assert shirt[0].name == "T-Shirt"
+        dress = await Product.objects.order_by("rating", "-name")
+        assert dress[0].name == "Dress"

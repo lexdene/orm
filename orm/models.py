@@ -48,6 +48,11 @@ class ModelMetaclass(SchemaMetaclass):
         return new_model
 
 
+def prepare_order_args(order_args):
+    from sqlalchemy.sql import text
+    return [text(arg) for arg in order_args]
+
+
 class QuerySet:
     ESCAPE_CHARACTERS = ['%', '_']
     def __init__(self, model_cls=None, filter_clauses=None, select_related=None, limit_count=None, offset=None):
@@ -95,6 +100,10 @@ class QuerySet:
 
         if self.query_offset:
             expr = expr.offset(self.query_offset)
+
+        if hasattr(self, '_order_args'):
+            order_args = prepare_order_args(self._order_args)
+            expr = expr.order_by(*order_args)
 
         return expr
 
@@ -229,6 +238,10 @@ class QuerySet:
         if len(rows) > 1:
             raise MultipleMatches()
         return self.model_cls.from_row(rows[0], select_related=self._select_related)
+
+    async def order_by(self, *args, **kwargs):
+        self._order_args = args
+        return await self.all(**kwargs)
 
     async def create(self, **kwargs):
         # Validate the keyword arguments.
